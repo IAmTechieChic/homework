@@ -1,0 +1,23 @@
+1.	How can Memcache improve a site’s performance? Include a description about how data is stored and retrieved in a multi-node configuration?
+---------------------------
+Memcache improves a site’s performance by alleviating database load.  It is a high-performance distributed memory object caching system that uses cache to keep things in memory.   It minimizes read/write to your datastore by serving as a dictionary of stored data (mirroring your datastore) with key/value pairs.
+
+Memcache can run on your webservers or nodes. Or, you can install it on its on separate server.  It works as a two-stage hash.  The client hashes the key against a list of servers.  When the server is identified, the client sends its request to perform a hash key lookup for the actual data.  The beauty is memcache client is smart enough to handle which server to assign a key/value pair to.  There’s no need to programmatically handle fault tolerance.  
+
+A lookup in memcache occurs before querying the datastore. If the data is present, return it.  Else, query the datastore, store the data as a key/value in memcache and return it.  If the data has changed, delete it from cache and update accordingly.
+
+
+2.	Please take a look at this controller action. Please tell us what you think of this code and how you would make it better. 
+--------------------------
+One thing that stands out about the controller action show_candidate is that it is very “bloated”.  It definitely meets the definition of a “Fat Controller” which many Rubyists attempt to avoid.  
+
+In addition to being bloated, the code is not very clear on its purpose making it difficutl to effectively test.  Although the action is to display candidates based upon the current user’s view, within it exists a lot of logic that is not properly placed. The series of nested if statements, the redundancy on the ActiveRecord calls cause for this code to best suited either in a helper, library or model file.  Just as classes should have a single responsibility, the same holds true for methods.
+
+Without knowing other dependencies and having full access to the underlying model, here are few steps I would take to improve the code:
+1.	Immediately pull out the nested if/else statements, including the loops, and place them in either the model or helper.
+2.	Each function of the main if/else would mapped to the following actions:
+    a.	get_Admin_User_View -- a view for admins
+    b.	get_Non_Admin_User_View -- a view for non-admins
+3.	Create methods calls for condition of if/else statements
+4.	Explore creating a query that accepts configurable parameters to determine how to sort the view.  I would also consider implementing scopes or filters on the ActiveRecord.
+5.	Evaluate associations to ensure effective use of ActiveRecord querying
